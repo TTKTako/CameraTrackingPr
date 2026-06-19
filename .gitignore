@@ -1,0 +1,53 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Model files (large binaries)
+*.vrm
+*.onnx
+*.pt
+*.pth
+*.pkl
+*.h5
+
+# Logs and debug
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.*
+
+# Test / temp output
+*.tmp
+*.bak
+output/

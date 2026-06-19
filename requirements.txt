@@ -1,0 +1,29 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# CameraTrackingPose — Python 3.10 dependencies
+#
+# Install order (handled by run.bat — do NOT pip install this file directly):
+#   1. numpy + six          (pre-req for chumpy + xtcocotools build steps)
+#   2. torch 2.1.2 CUDA     (pip)
+#   3. chumpy               (pip --no-build-isolation)
+#   4. THIS FILE            (pip install -r requirements.txt)
+#   5. mmengine, mmcv,      (mim install)
+#      mmdet, mmpose
+# ──────────────────────────────────────────────────────────────────────────────
+
+# numpy pinned to match run.bat; must be installed BEFORE this file
+# (chumpy and xtcocotools import it at build time)
+numpy==1.23.5
+
+# core helpers (also pre-installed in run.bat, listed here for completeness)
+six>=1.11.0
+
+# Computer Vision
+opencv-python>=4.8.0
+scipy>=1.11.0
+pillow>=10.0.0
+
+# WebSocket server (Unity communication)
+websockets>=12.0
+
+# Utilities
+tqdm>=4.66.0
