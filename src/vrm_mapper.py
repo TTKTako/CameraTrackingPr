@@ -42,9 +42,9 @@ def _rotation_align(src: np.ndarray, dst: np.ndarray) -> Rotation:
     return Rotation.from_rotvec(angle * _norm(cross))
 
 def _to_unity_quat(rot: Rotation) -> List[float]:
-    """Converts Right-Handed Python Quaternion to Left-Handed Unity Quaternion"""
+    """Passes the pure quaternion. The points are already in Unity Space."""
     q = rot.as_quat() # [x, y, z, w]
-    return [q[0], -q[1], -q[2], q[3]]
+    return [float(q[0]), float(q[1]), float(q[2]), float(q[3])] # NO negations!
 
 class EMAFilter:
     """Smooths out AI jitter using Exponential Moving Average."""
@@ -93,14 +93,20 @@ class VRMMapper:
                 bones[bone_name] = self._filter.update(bone_name, _to_unity_quat(rot))
 
         # Core Body Setup
-        bone("left_shoulder", "left_elbow", _LEFT, "LeftUpperArm")
-        bone("left_elbow", "left_wrist", _LEFT, "LeftLowerArm")
-        bone("right_shoulder", "right_elbow", _RIGHT, "RightUpperArm")
-        bone("right_elbow", "right_wrist", _RIGHT, "RightLowerArm")
-        bone("left_hip", "left_knee", _DOWN, "LeftUpperLeg")
-        bone("left_knee", "left_ankle", _DOWN, "LeftLowerLeg")
-        bone("right_hip", "right_knee", _DOWN, "RightUpperLeg")
-        bone("right_knee", "right_ankle", _DOWN, "RightLowerLeg")
+        # Core Body Setup (MIRRORED FOR WEBCAM)
+        # We map MediaPipe's 'left' to Unity's 'Right', using the _RIGHT T-pose direction
+        bone("left_shoulder", "left_elbow", _RIGHT, "RightUpperArm")
+        bone("left_elbow", "left_wrist", _RIGHT, "RightLowerArm")
+        
+        # We map MediaPipe's 'right' to Unity's 'Left', using the _LEFT T-pose direction
+        bone("right_shoulder", "right_elbow", _LEFT, "LeftUpperArm")
+        bone("right_elbow", "right_wrist", _LEFT, "LeftLowerArm")
+        
+        # You should also mirror the legs so your knees don't cross!
+        bone("left_hip", "left_knee", _DOWN, "RightUpperLeg")
+        bone("left_knee", "left_ankle", _DOWN, "RightLowerLeg")
+        bone("right_hip", "right_knee", _DOWN, "LeftUpperLeg")
+        bone("right_knee", "right_ankle", _DOWN, "LeftLowerLeg")
 
         # Spine Math
         ls, rs, lh, rh = pt("left_shoulder"), pt("right_shoulder"), pt("left_hip"), pt("right_hip")
