@@ -8,10 +8,7 @@ Provides both 2D pixel coordinates (for video overlay) and True 3D world coordin
 from typing import List, Optional
 import numpy as np
 import cv2
-
 import mediapipe as mp
-import mediapipe.solutions.holistic as mp_holistic # Explicit, safe import
-
 from .config import Config
 
 class PoseResult:
@@ -36,8 +33,8 @@ class PoseEstimator:
         self._cfg = config
         print("[PoseEstimator] Loading MediaPipe Holistic 3D...")
         
-        # --- USE THE EXPLICIT IMPORT DIRECTLY ---
-        self.mp_holistic = mp_holistic
+        # กลับมาใช้วิธีการเรียกใช้งานที่คลีนและเป็นมาตรฐานที่สุด!
+        self.mp_holistic = mp.solutions.holistic
         self.holistic = self.mp_holistic.Holistic(
             static_image_mode=False,
             model_complexity=1,

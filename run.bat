@@ -77,7 +77,7 @@ python -m mim install "mmdet>=3.1.0,<3.3.0"
 python -m mim install "mmpose>=1.3.0"
 
 echo [4.7/5] Install mediapipe...
-python -m pip install mediapipe
+python -m pip install mediapipe==0.10.14
 
 echo [5/5] checking installations...
 python -c "exec('try:\n    import torch\n    print(\'>>> Torch:\', torch.__version__, \'| CUDA available:\', torch.cuda.is_available())\nexcept:\n    print(\'>>> Torch not installed or broken\')')"

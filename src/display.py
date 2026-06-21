@@ -60,7 +60,7 @@ class DisplayManager:
         if pose is not None:
             x1, y1, x2, y2, _ = pose.bbox
             cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
-            self._update_3d_plot(pose.keypoints)
+            self._update_3d_plot(pose)
         else:
             # Hide lines on both plots if no person is detected
             for lines in [self.lines_front, self.lines_side]:
