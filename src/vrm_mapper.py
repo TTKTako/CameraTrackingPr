@@ -117,7 +117,7 @@ class VRMMapper:
             bones["Hips"] = smoothed_spine
             bones["Spine"] = smoothed_spine
 
-        # Head Math (FIXED: 40-Degree Tilt)
+        # Head Math (Strict Anti-Tilt Fix)
         ls, rs = pt("left_shoulder"), pt("right_shoulder")
         le, re = pt("left_ear"), pt("right_ear")
         nose = pt("nose")
@@ -125,21 +125,24 @@ class VRMMapper:
         if ls is not None and rs is not None:
             shoulder_center = (ls + rs) * 0.5
             
-            # 1. Use the Ears to find the true Center of the Skull (Fixes the forward pitch!)
+            # 1. Get the center of the head
             if le is not None and re is not None:
                 head_top = (le + re) * 0.5
-            
-            # 2. Fallback: If ears are hidden, use the nose, but strip the depth (Z) 
-            # so the head doesn't bow forward to try and reach the nose.
             elif nose is not None:
                 head_top = nose.copy()
-                head_top[2] = shoulder_center[2] 
-            
             else:
                 head_top = None
 
             if head_top is not None:
-                head_rot = _to_unity_quat(_rotation_align(_UP, _norm(head_top - shoulder_center)))
+                # THE STRICT ANTI-TILT FIX:
+                # We force the head to exist on the exact same Z-plane as the shoulders.
+                # This mathematically destroys the 40-degree forward pitch, 
+                # forcing the Avatar to look perfectly straight ahead!
+                head_top[2] = shoulder_center[2] 
+                
+                # Calculate the angle and apply to the bone
+                head_dir = _norm(head_top - shoulder_center)
+                head_rot = _to_unity_quat(_rotation_align(_UP, head_dir))
                 bones["Head"] = self._filter.update("Head", head_rot)
 
         # --- NEW: Calculate Global Position (Root X, Y, Z) ---
