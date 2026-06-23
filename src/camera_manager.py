@@ -9,7 +9,7 @@ Key capabilities:
   • Load a video file that replaces live cameras
   • Video loops indefinitely until manually stopped
 """
-
+import platform
 import threading
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Tuple
@@ -18,6 +18,25 @@ import cv2
 import numpy as np
 
 from .config import Config
+
+# --- NEW HELPER FUNCTION ---
+def _open_camera(idx: int) -> cv2.VideoCapture:
+    """Uses DirectShow on Windows to allow multiple webcams simultaneously."""
+    if platform.system() == "Windows":
+        return cv2.VideoCapture(idx, cv2.CAP_DSHOW)
+    return cv2.VideoCapture(idx)
+
+def scan_cameras(max_index: int = 8) -> List[Tuple[int, str]]:
+    found: List[Tuple[int, str]] = []
+    for i in range(max_index + 1):
+        cap = _open_camera(i) # <-- CHANGED THIS LINE
+        if cap.isOpened():
+            w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            desc = f"{i} — {w}×{h}" if w and h else f"{i} — unknown"
+            found.append((i, desc))
+            cap.release()
+    return found
 
 
 def scan_cameras(max_index: int = 8) -> List[Tuple[int, str]]:
@@ -61,7 +80,7 @@ class CameraManager:
     def open_cameras(self) -> None:
         """Open every camera listed in config.camera_indices."""
         for idx in self._cfg.camera_indices:
-            cap = cv2.VideoCapture(idx)
+            cap = _open_camera(idx) # <-- CHANGED THIS LINE
             if not cap.isOpened():
                 print(f"[CameraManager] Warning: Camera {idx} could not be opened.")
                 cap = None

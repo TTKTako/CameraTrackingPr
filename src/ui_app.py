@@ -45,6 +45,7 @@ import os
 import queue
 import threading
 import time
+import copy
 import tkinter as tk
 from dataclasses import dataclass
 from tkinter import filedialog, messagebox, ttk
@@ -139,6 +140,7 @@ class _PipelineThread(threading.Thread):
             people_counts: Dict[int, int] = {}
             run_inf = (frame_n % (self._cfg.skip_frames + 1) == 0)
 
+            # 1. PROCESS ALL CAMERAS
             for cam_idx, frame in frames.items():
                 if run_inf:
                     results              = self._estimator.estimate(frame)
@@ -146,14 +148,50 @@ class _PipelineThread(threading.Thread):
                     closest              = PoseEstimator.get_closest_person(results)
                     closest_pose[cam_idx]= closest
                     people_counts[cam_idx] = len(results)
-                    if closest is not None:
-                        bones = self._vrm.map(closest)
-                        self._ws.send_pose(
-                            camera_id=cam_idx,
-                            bones=bones,
-                            keypoints=closest.keypoints.tolist(),
-                        )
+                    # Notice: We REMOVED the self._ws.send_pose from inside this loop!
 
+            # 2. MULTI-CAMERA AI FUSION!
+            if run_inf:
+                valid_poses = [p for p in closest_pose.values() if p is not None]
+                
+                if valid_poses:
+                    # Start with a copy of the first camera's pose
+                    fused_pose = copy.deepcopy(valid_poses[0])
+                    
+                    # If we have multiple cameras, merge them mathematically!
+                    if len(valid_poses) > 1:
+                        num_kps = len(fused_pose.keypoints_3d)
+                        merged_3d = np.zeros_like(fused_pose.keypoints_3d)
+                        merged_scores = np.zeros_like(fused_pose.keypoint_scores)
+                        weight_sum = np.zeros(num_kps)
+                        
+                        for p in valid_poses:
+                            for i in range(num_kps):
+                                score = p.keypoint_scores[i]
+                                # Squaring the score heavily punishes bad angles/occlusions
+                                weight = score ** 2 
+                                
+                                merged_3d[i] += p.keypoints_3d[i] * weight
+                                weight_sum[i] += weight
+                                # Keep the highest confidence score for the UI
+                                merged_scores[i] = max(merged_scores[i], score) 
+                                
+                        for i in range(num_kps):
+                            if weight_sum[i] > 0:
+                                merged_3d[i] /= weight_sum[i]
+                                
+                        fused_pose.keypoints_3d = merged_3d
+                        fused_pose.keypoint_scores = merged_scores
+
+                    # 3. Map to VRM and Send exactly ONCE per frame
+                    bones = self._vrm.map(fused_pose)
+                    self._ws.send_pose(
+                        camera_id=99, # Indicates a merged data packet
+                        bones=bones,
+                        keypoints=fused_pose.keypoints.tolist(),
+                    )
+
+            # --- REMAINDER OF YOUR LOOP STAYS THE SAME ---
             grid = self._display.build_grid(
                 frames,
                 all_poses=all_poses,

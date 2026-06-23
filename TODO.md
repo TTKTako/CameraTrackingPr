@@ -1,5 +1,4 @@
-- [] Documentation
-- [] Create Unity Place and connect to socket
+- [x] Create Unity Place and connect to socket
 - [x] Make the app check the specific pose and sent the signal to unity to change character (checking sample image in poseTemplate)
 - [] make sure multi camera work
 - [x] add 3d look isometrix camera angle of the pose rig
