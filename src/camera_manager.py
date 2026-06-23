@@ -80,10 +80,17 @@ class CameraManager:
     def open_cameras(self) -> None:
         """Open every camera listed in config.camera_indices."""
         for idx in self._cfg.camera_indices:
-            cap = _open_camera(idx) # <-- CHANGED THIS LINE
-            if not cap.isOpened():
+            cap = _open_camera(idx) # Using the DirectShow fix from earlier
+            
+            if cap and cap.isOpened():
+                # THE MULTI-CAM FIX: Force lower resolution so the USB Controller doesn't crash!
+                # 640x480 is plenty of pixels for MediaPipe to track perfectly.
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+            else:
                 print(f"[CameraManager] Warning: Camera {idx} could not be opened.")
                 cap = None
+                
             self._cameras[idx] = _CameraSource(
                 index=idx,
                 label=f"Camera {idx}",
