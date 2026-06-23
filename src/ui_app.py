@@ -745,8 +745,11 @@ class CameraTrackingApp(tk.Tk):
             pass
 
         if update is not None:
-            self._render_frame(update.grid)
-            self._canvas.delete("placeholder")
+            # Safety check so the UI doesn't crash if grid is None
+            if update.grid is not None:
+                self._render_frame(update.grid)
+                self._canvas.delete("placeholder")
+
             self._lbl_status.configure(text="● Running", foreground="#a6e3a1")
             self._lbl_fps.configure(text=f"FPS: {update.fps:.1f}")
             total = sum(update.people_counts.values())

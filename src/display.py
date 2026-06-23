@@ -51,10 +51,13 @@ class DisplayManager:
         }
 
     def build_grid(self, frames: Dict[int, np.ndarray], closest: Dict[int, Optional[PoseResult]], **kwargs):
-        if 0 not in frames: return None
+        if not frames: return None  # Check if the dictionary is empty instead
         
-        frame = frames[0].copy()
-        pose = closest.get(0)
+        # Dynamically get the first active camera index
+        cam_idx = next(iter(frames.keys()))
+        
+        frame = frames[cam_idx].copy()
+        pose = closest.get(cam_idx)
 
         # 1. Update 3D data if a person is found
         if pose is not None:
